@@ -6,8 +6,8 @@ const io = require('socket.io')(server);
 const helpers = require('./utils/helpers');
 const config = require('./utils/config');
 const db = require('./utils/db');
-const codeRouter = require('./controllers/code');
-const promptsRouter = require('./controllers/prompts');
+const codeRouter = require('./src/controllers/code');
+const promptsRouter = require('./src/controllers/prompts');
 
 io.on('connect', socket => {
     socket.on('join_room', async (data) => {

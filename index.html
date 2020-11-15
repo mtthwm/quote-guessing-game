@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      a {
+          background-color: green;
+          color: white;
+          text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Welcome to the game!</h1>
+    <a href="/start_game">Start Game</a>
+    <a href="/join_game">Join Game</a>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io();
+    </script>
+  </body>
+</html>

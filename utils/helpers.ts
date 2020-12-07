@@ -1,4 +1,4 @@
-const random_room_code = (length) => {
+const random_room_code = (length : number) => {
     const possible_characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     let build_string = "";
     for (let i = 0; i < length; i++) {

@@ -1,4 +1,4 @@
-const config = require('./config');
+import config from './config';
 const connection_options = {
     host: config.DB_HOST,
     port: config.DB_PORT,
@@ -21,17 +21,17 @@ client.connect()
                     client.end();
                     process.exit(1);
                 })
-                .catch((err) => {
+                .catch((err: Error) => {
                     console.log(err);
                     process.exit(-1);
                 });
             })
-            .catch(() => {
+            .catch((err: Error) => {
                 console.log(err);
                 process.exit(-1);
             });
     })
-    .catch((err) => {
+    .catch((err: Error) => {
         console.log(err);
         process.exit(-1);
     });

@@ -1,4 +1,4 @@
-const express = require('express');
+import express from 'express';
 const codeRouter = express.Router();
 const helpers = require('../utils/helpers');
 const db = require('../utils/db');
@@ -18,7 +18,6 @@ codeRouter.get('/validate/:join_code', async (request, response) => {
     const join_code = request.params.join_code;
     try {
         const valid = await db.validate_code(join_code);
-        console.log(valid);
         response.send({'valid': valid})
     } catch (e)
     {

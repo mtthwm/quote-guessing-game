@@ -1,5 +1,5 @@
 import config from './config';
-import {Player} from '../types/Types';
+import {Player, Game} from '../types/Types';
 import { join } from 'path';
 const connection_options = {
     host: config.DB_HOST,
@@ -19,7 +19,7 @@ const create_game = async (join_code : string) => {
     return pool.query('INSERT INTO game (join_code) VALUES ($1);', [join_code]);
 }
 
-const get_game_by_code = async (join_code : string) => {
+const get_game_by_code = async (join_code : string): Promise<Game> => {
     return (await pool.query('SELECT * FROM game WHERE join_code=$1 LIMIT 1;', [join_code])).rows[0];
 }
 
@@ -32,10 +32,10 @@ const validate_code = async (join_code : string) => {
     return (await pool.query('SELECT EXISTS(SELECT * FROM game WHERE join_code=$1);', [join_code])).rows[0].exists;
 }
 
-const create_user = async (player_name : string, join_code : string, player_index: number) => {
+const create_user = async (player_name : string, join_code : string, player_index: number, player_socket: string) => {
     const game_to_join = await get_game_by_code(join_code);
     console.log(game_to_join, "JOIN GAME");
-    return pool.query('INSERT INTO player (player_name, game_id, player_index) VALUES ($1, $2, $3);', [player_name, game_to_join.id, player_index]);
+    return pool.query('INSERT INTO player (player_name, game_id, player_index, player_socket) VALUES ($1, $2, $3, $4);', [player_name, game_to_join.id, player_index, player_socket]);
 }
 
 const user_exists = async (player_name : string, join_code : string) => {
@@ -46,17 +46,26 @@ const reindex_users = async (game_id: string) => {
     return (await pool.query('WITH rec AS (SELECT 0 i UNION ALL SELECT i+1 FROM rec WHERE i < COUNT(SELECT * FROM player WHERE game_id=$1)) SELECT * FROM rec', [game_id]))
 }
 
-const get_player_by_socket = async (socket_id: string) => {
-    return (await pool.query('SELECT * FROM player WHERE player_socket=$1 LIMIT 1;', [socket_id])).rows[0];
+const get_player_by_socket = async (socket_id: string): Promise<Player> => {
+    const result = await pool.query('SELECT * FROM player WHERE player_socket=$1;', [socket_id]);
+    // console.log(result);
+    return result.rows[0];
 }
 
-const get_game_code_by_player_socket = async (socket_id: string) => {
-    return (await pool.query('SELECT * FROM player p INNER JOIN game g ON p.game_id = g.id WHERE player_socket=$1 LIMIT 1', [socket_id])).rows[0].join_code;
+const get_game_by_player_socket = async (socket_id: string): Promise<Game> => {
+    const player = await get_player_by_socket(socket_id);
+    // console.log(player);
+    // console.log(socket_id);
+    // console.log(await pool.query('SELECT (player_socket) FROM player;'));
+    const result = await pool.query('SELECT * FROM game WHERE join_code=$1;', [player.game_id]);
+    // console.log(result);
+    return result.rows[0];
 }
 
 const delete_user_by_socket = async (socket_id: string): Promise<void> => {
     await pool.query('DELETE FROM player WHERE player_socket=$1;', [socket_id]);
-    await reindex_users(await get_game_code_by_player_socket(socket_id));
+    const game = await get_game_by_player_socket(socket_id);
+    await reindex_users(game.join_code);
 }
 
-module.exports = { get_db_client, create_game, validate_code, get_game_by_code, create_user, get_players, user_exists, delete_user_by_socket, reindex_users, get_game_code_by_player_socket, get_player_by_socket }
+module.exports = { get_db_client, create_game, validate_code, get_game_by_code, create_user, get_players, user_exists, delete_user_by_socket, reindex_users, get_game_by_player_socket, get_player_by_socket }
